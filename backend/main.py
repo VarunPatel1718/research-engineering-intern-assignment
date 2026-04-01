@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List, Optional
+from typing import Optional
 import os
 from dotenv import load_dotenv
 
@@ -10,7 +10,6 @@ load_dotenv()
 
 app = FastAPI(title="NarrativeTrail API", version="1.0.0")
 
-# Allow frontend to call backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -19,7 +18,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── Health check ──────────────────────────────────────────
+# ── Health ────────────────────────────────────────────────
 @app.get("/api/health")
 def health():
     return {"status": "ok", "message": "NarrativeTrail backend running"}
@@ -30,7 +29,7 @@ def stats():
     from data.database import get_stats
     return get_stats()
 
-# ── Subreddits list ───────────────────────────────────────
+# ── Subreddits ────────────────────────────────────────────
 @app.get("/api/subreddits")
 def subreddits():
     from data.database import get_subreddits
@@ -54,26 +53,55 @@ def network():
     nodes, edges = get_network_data()
     return {"nodes": nodes, "edges": edges}
 
-# ── Search (placeholder — FAISS added Day 3) ──────────────
+# ── Semantic Search (FAISS) ───────────────────────────────
 @app.get("/api/search")
-def search(q: Optional[str] = Query(default='')):
-    if not q:
-        return {"results": [], "query": q, "message": "Semantic search not yet built"}
-    from data.database import get_connection
-    con = get_connection()
-    df = con.execute("""
-        SELECT id, title, author, subreddit, score, created_utc, permalink
-        FROM posts
-        WHERE title ILIKE ? OR selftext ILIKE ?
-        ORDER BY score DESC
-        LIMIT 20
-    """, [f'%{q}%', f'%{q}%']).fetchdf()
-    return {"results": df.to_dict(orient='records'), "query": q}
+def search(q: Optional[str] = Query(default=''), top_k: int = 10):
+    if not q or not q.strip():
+        return {"results": [], "query": q, "suggestions": []}
 
-# ── Clusters (placeholder — BERTopic added Day 3) ─────────
+    from ml.embeddings import search_similar, embeddings_exist
+    from data.database import get_posts_by_ids
+
+    if not embeddings_exist():
+        return {"error": "Embeddings not built yet. Run ml/embeddings.py first."}
+
+    result_ids, distances = search_similar(q, top_k=top_k)
+    posts = get_posts_by_ids(result_ids)
+
+    # Add distance score to each post
+    id_to_dist = dict(zip(result_ids, distances))
+    for post in posts:
+        post['similarity_score'] = round(float(id_to_dist.get(post['id'], 0)), 4)
+
+    # Suggest follow-up queries based on top result titles
+    suggestions = []
+    if posts:
+        top_titles = [p['title'] for p in posts[:3]]
+        suggestions = generate_suggestions(q, top_titles)
+
+    return {"results": posts, "query": q, "suggestions": suggestions}
+
+def generate_suggestions(query: str, top_titles: list):
+    """Simple rule-based follow-up suggestions."""
+    suggestions = [
+        f"{query} Conservative vs Liberal framing",
+        f"{query} election impact 2024",
+        f"{query} reddit community response"
+    ]
+    return suggestions[:3]
+
+# ── Clusters (BERTopic) ───────────────────────────────────
 @app.get("/api/clusters")
-def clusters():
-    return {"message": "BERTopic clustering coming in Day 3"}
+def clusters(nr_topics: int = Query(default=10)):
+    from ml.clustering import load_clusters, build_clusters
+
+    cached = load_clusters()
+
+    # Rebuild if different nr_topics requested
+    if cached is None or cached.get('nr_topics') != nr_topics:
+        cached = build_clusters(nr_topics=nr_topics)
+
+    return cached
 
 # ── Run ───────────────────────────────────────────────────
 if __name__ == "__main__":
