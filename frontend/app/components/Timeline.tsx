@@ -33,7 +33,6 @@ export default function Timeline() {
     const res = await axios.get(`${API}/api/timeline`, { params: { query: q } });
     const raw: any[] = res.data.data;
 
-    // Pivot: week → { week, subreddit: count }
     const map: Record<string, any> = {};
     raw.forEach(row => {
       if (!map[row.week]) map[row.week] = { week: row.week };
@@ -42,11 +41,10 @@ export default function Timeline() {
     const pivoted = Object.values(map).sort((a, b) => a.week.localeCompare(b.week));
     setData(pivoted);
 
-    // Auto summary
     if (pivoted.length > 0) {
       const total = raw.reduce((s, r) => s + r.post_count, 0);
       const peak = raw.reduce((a, b) => a.post_count > b.post_count ? a : b);
-      setSummary(`Found ${total} posts matching "${q || 'all posts'}". Peak activity was in week of ${peak.week} on r/${peak.subreddit} with ${peak.post_count} posts.`);
+      setSummary(res.data.summary || `Found ${total} posts matching "${q || 'all posts'}". Peak activity was in week of ${peak.week} on r/${peak.subreddit} with ${peak.post_count} posts.`);
     }
     setLoading(false);
   };

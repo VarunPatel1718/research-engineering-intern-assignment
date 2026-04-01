@@ -16,6 +16,7 @@ export default function Search() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [summary, setSummary] = useState('');
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 
@@ -26,6 +27,7 @@ export default function Search() {
     const res = await axios.get(`${API}/api/search`, { params: { q } });
     setResults(res.data.results || []);
     setSuggestions(res.data.suggestions || []);
+    setSummary(res.data.summary || '');
     setLoading(false);
   };
 
@@ -36,7 +38,6 @@ export default function Search() {
         Finds posts by meaning — not just keywords. Try concepts with zero word overlap.
       </p>
 
-      {/* Search bar */}
       <div className="flex gap-2 mb-4">
         <input
           value={query}
@@ -55,6 +56,14 @@ export default function Search() {
         </button>
       </div>
 
+      {/* AI Summary */}
+      {summary && (
+        <div className="mb-4 p-4 rounded-lg text-sm"
+          style={{ background: '#1a1f2e', border: '1px solid #4f46e5', color: '#a0aec0' }}>
+          🤖 <strong className="text-white">AI Insight:</strong> {summary}
+        </div>
+      )}
+
       {/* Suggestions */}
       {suggestions.length > 0 && (
         <div className="mb-4">
@@ -69,9 +78,7 @@ export default function Search() {
         </div>
       )}
 
-      {/* Results */}
       {loading && <p style={{ color: '#718096' }}>Searching embeddings...</p>}
-
       {!loading && searched && results.length === 0 && (
         <p style={{ color: '#718096' }}>No results found.</p>
       )}

@@ -42,65 +42,63 @@ def timeline(
     subreddits: Optional[str] = Query(default='')
 ):
     from data.database import get_timeline
+    from ml.summarizer import summarize_timeline
     subreddit_list = [s.strip() for s in subreddits.split(',') if s.strip()] if subreddits else []
     data = get_timeline(query=query, subreddits=subreddit_list)
-    return {"data": data, "query": query}
+    summary = summarize_timeline(query, data)
+    return {"data": data, "query": query, "summary": summary}
 
-# ── Network ───────────────────────────────────────────────
+# ── Network with PageRank ─────────────────────────────────
 @app.get("/api/network")
 def network():
-    from data.database import get_network_data
-    nodes, edges = get_network_data()
-    return {"nodes": nodes, "edges": edges}
+    from ml.network import build_network
+    from ml.summarizer import summarize_network
+    result = build_network()
+    result['summary'] = summarize_network(result['stats'])
+    return result
 
-# ── Semantic Search (FAISS) ───────────────────────────────
+# ── Semantic Search ───────────────────────────────────────
 @app.get("/api/search")
 def search(q: Optional[str] = Query(default=''), top_k: int = 10):
     if not q or not q.strip():
-        return {"results": [], "query": q, "suggestions": []}
+        return {"results": [], "query": q, "suggestions": [], "summary": ""}
 
     from ml.embeddings import search_similar, embeddings_exist
     from data.database import get_posts_by_ids
+    from ml.summarizer import summarize_search
 
     if not embeddings_exist():
-        return {"error": "Embeddings not built yet. Run ml/embeddings.py first."}
+        return {"error": "Embeddings not built yet."}
 
     result_ids, distances = search_similar(q, top_k=top_k)
     posts = get_posts_by_ids(result_ids)
 
-    # Add distance score to each post
     id_to_dist = dict(zip(result_ids, distances))
     for post in posts:
         post['similarity_score'] = round(float(id_to_dist.get(post['id'], 0)), 4)
 
-    # Suggest follow-up queries based on top result titles
-    suggestions = []
-    if posts:
-        top_titles = [p['title'] for p in posts[:3]]
-        suggestions = generate_suggestions(q, top_titles)
+    summary = summarize_search(q, posts)
 
-    return {"results": posts, "query": q, "suggestions": suggestions}
-
-def generate_suggestions(query: str, top_titles: list):
-    """Simple rule-based follow-up suggestions."""
     suggestions = [
-        f"{query} Conservative vs Liberal framing",
-        f"{query} election impact 2024",
-        f"{query} reddit community response"
+        f"{q} Conservative vs Liberal framing",
+        f"{q} election impact 2024",
+        f"{q} reddit community response"
     ]
-    return suggestions[:3]
 
-# ── Clusters (BERTopic) ───────────────────────────────────
+    return {"results": posts, "query": q, "suggestions": suggestions, "summary": summary}
+
+# ── Clusters ──────────────────────────────────────────────
 @app.get("/api/clusters")
 def clusters(nr_topics: int = Query(default=10)):
     from ml.clustering import load_clusters, build_clusters
+    from ml.summarizer import summarize_clusters
 
     cached = load_clusters()
-
-    # Rebuild if different nr_topics requested
     if cached is None or cached.get('nr_topics') != nr_topics:
         cached = build_clusters(nr_topics=nr_topics)
 
+    summary = summarize_clusters(cached.get('topic_info', []), nr_topics)
+    cached['summary'] = summary
     return cached
 
 # ── Run ───────────────────────────────────────────────────
