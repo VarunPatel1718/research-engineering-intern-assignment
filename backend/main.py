@@ -7,6 +7,12 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
+# Run startup checks
+import startup
+startup.download_data()
+startup.build_database()
+startup.build_embeddings()
+startup.build_clusters_cache()
 
 app = FastAPI(title="NarrativeTrail API", version="1.0.0")
 
