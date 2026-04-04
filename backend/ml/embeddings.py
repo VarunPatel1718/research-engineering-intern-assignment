@@ -42,7 +42,7 @@ def embeddings_exist():
             os.path.exists(IDS_PATH))
 
 def load_embeddings():
-    embeddings = np.load(EMBEDDINGS_PATH)
+    embeddings = np.load(EMBEDDINGS_PATH, allow_pickle=True)
     index, ids = get_index_and_ids()
     return embeddings, index, ids
 
