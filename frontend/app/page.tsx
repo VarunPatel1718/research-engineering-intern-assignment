@@ -141,10 +141,10 @@ export default function Home() {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-6 py-6">
-        {activeTab === 'Timeline' && <Timeline />}
-        {activeTab === 'Search' && <Search />}
-        {activeTab === 'Network' && <Network />}
-        {activeTab === 'Clusters' && <Clusters />}
+        <div style={{ display: activeTab === 'Timeline' ? 'block' : 'none' }}><Timeline /></div>
+        <div style={{ display: activeTab === 'Search' ? 'block' : 'none' }}><Search /></div>
+        <div style={{ display: activeTab === 'Network' ? 'block' : 'none' }}><Network /></div>
+        <div style={{ display: activeTab === 'Clusters' ? 'block' : 'none' }}><Clusters /></div>
       </div>
 
       {/* Footer */}
