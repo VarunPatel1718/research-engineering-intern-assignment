@@ -5,6 +5,8 @@ import Timeline from './components/Timeline';
 import Search from './components/Search';
 import Network from './components/Network';
 import Clusters from './components/Clusters';
+import Chatbot from './components/Chatbot';
+import KeyFindings from './components/KeyFindings';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -13,6 +15,7 @@ const TABS = [
   { id: 'Search', icon: '🔍', label: 'Semantic Search' },
   { id: 'Network', icon: '🕸️', label: 'Network' },
   { id: 'Clusters', icon: '🗂️', label: 'Topic Clusters' },
+  { id: 'Chat', icon: '💬', label: 'Research Assistant' },
 ];
 
 export default function Home() {
@@ -145,6 +148,7 @@ export default function Home() {
         <div style={{ display: activeTab === 'Search' ? 'block' : 'none' }}><Search /></div>
         <div style={{ display: activeTab === 'Network' ? 'block' : 'none' }}><Network /></div>
         <div style={{ display: activeTab === 'Clusters' ? 'block' : 'none' }}><Clusters /></div>
+        <div style={{ display: activeTab === 'Chat' ? 'block' : 'none' }}><Chatbot /></div>
       </div>
 
       {/* Footer */}
