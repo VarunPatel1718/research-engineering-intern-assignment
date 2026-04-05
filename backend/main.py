@@ -183,7 +183,7 @@ print("Pre-computing coordination events...")
 _clean_coord = _clean.copy()
 _clean_coord["created_utc"] = pd.to_datetime(_clean_coord["created_utc"])
 _clean_coord = _clean_coord.sort_values("created_utc")
-_clean_coord["window"] = _clean_coord["created_utc"].dt.floor("6H")
+_clean_coord["window"] = _clean_coord["created_utc"].dt.floor("6h")
 
 _coord_events = []
 _heatmap      = []
