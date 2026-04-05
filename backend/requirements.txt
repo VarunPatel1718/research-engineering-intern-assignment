@@ -1,0 +1,15 @@
+flask==3.0.0
+flask-cors==4.0.0
+flask-compress==1.14
+pandas==2.2.0
+pyarrow==15.0.0
+numpy==1.26.0
+sentence-transformers==2.5.0
+faiss-cpu==1.7.4
+networkx==3.2.1
+python-louvain==0.16
+hdbscan==0.8.33
+scikit-learn==1.4.0
+groq==0.4.2
+python-dotenv==1.0.0
+gunicorn==21.2.0
