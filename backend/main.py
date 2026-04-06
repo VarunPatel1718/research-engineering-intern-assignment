@@ -326,6 +326,101 @@ def source_network():
     data["edges"] = [e for e in data["edges"] if e.get("weight",0)>=min_w]
     return jsonify(data)
 
+# ── ENDPOINT 17: NARRATIVE PROPAGATION ───────────────────────────────────────
+@app.route("/api/propagation")
+def propagation():
+    q = request.args.get("q", "").strip()
+    if not q or len(q) < 2:
+        return jsonify({"error": "Query too short", "posts": [], "subreddits": []})
+
+    q_emb = embed_model.encode([q]).astype("float32")
+    faiss.normalize_L2(q_emb)
+    D, I = index.search(q_emb, 500)
+
+    results = meta.iloc[I[0]].copy()
+    results["similarity"] = D[0]
+    results = results[results["similarity"] > 0.25]
+
+    if not len(results):
+        return jsonify({"query": q, "posts": [], "subreddits": []})
+
+    results["created_utc"] = pd.to_datetime(results["created_utc"])
+    results = results.sort_values("created_utc")
+    results["created_utc"] = results["created_utc"].astype(str)
+
+    posts = results[["subreddit","title","created_utc","similarity","ideological_bloc"]].to_dict(orient="records")
+    subreddits = results.groupby("subreddit").agg(
+        first_post=("created_utc","first"),
+        count=("title","count"),
+        bloc=("ideological_bloc","first")
+    ).reset_index().sort_values("first_post").to_dict(orient="records")
+
+    return jsonify({"query": q, "posts": posts, "subreddits": subreddits})
+
+
+# ── ENDPOINT 18: COORDINATED AMPLIFICATION ────────────────────────────────────
+@app.route("/api/coordinated")
+def coordinated():
+    q = request.args.get("q", "").strip()
+    window_hours = int(request.args.get("window_hours", 6))
+    min_authors = int(request.args.get("min_authors", 3))
+
+    if not q or len(q) < 2:
+        return jsonify({"error": "Query too short", "events": []})
+
+    q_emb = embed_model.encode([q]).astype("float32")
+    faiss.normalize_L2(q_emb)
+    D, I = index.search(q_emb, 500)
+
+    results = meta.iloc[I[0]].copy()
+    results["similarity"] = D[0]
+    results = results[results["similarity"] > 0.3]
+
+    if not len(results):
+        return jsonify({"query": q, "events": [], "total_posts": 0})
+
+    results["created_utc"] = pd.to_datetime(results["created_utc"])
+    results = results.sort_values("created_utc").reset_index(drop=True)
+
+    window = pd.Timedelta(hours=window_hours)
+    events = []
+
+    for sub in results["subreddit"].unique():
+        sub_posts = results[results["subreddit"] == sub].reset_index(drop=True)
+        if len(sub_posts) < min_authors:
+            continue
+        i = 0
+        while i < len(sub_posts):
+            window_end = sub_posts.iloc[i]["created_utc"] + window
+            cluster = sub_posts[
+                (sub_posts["created_utc"] >= sub_posts.iloc[i]["created_utc"]) &
+                (sub_posts["created_utc"] <= window_end)
+            ]
+            unique_authors = cluster["author"].nunique() if "author" in cluster.columns else len(cluster)
+            if len(cluster) >= min_authors:
+                cluster_copy = cluster.copy()
+                cluster_copy["created_utc"] = cluster_copy["created_utc"].astype(str)
+                events.append({
+                    "subreddit": sub,
+                    "bloc": sub_posts.iloc[0]["ideological_bloc"],
+                    "window_start": str(sub_posts.iloc[i]["created_utc"]),
+                    "window_end": str(window_end),
+                    "post_count": len(cluster),
+                    "unique_authors": int(unique_authors),
+                    "posts": cluster_copy[["title","created_utc","similarity"]].head(5).to_dict(orient="records"),
+                    "intensity": round(len(cluster) / window_hours, 2)
+                })
+                i += len(cluster)
+            else:
+                i += 1
+
+    events.sort(key=lambda x: x["post_count"], reverse=True)
+    return jsonify({
+        "query": q,
+        "window_hours": window_hours,
+        "events": events[:20],
+        "total_posts": len(results)
+    })
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

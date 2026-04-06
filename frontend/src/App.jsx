@@ -1,8 +1,8 @@
-import { useState, lazy, Suspense, memo, useMemo } from "react"
+import { useState, lazy, Suspense, memo } from "react"
 import Sidebar from "./components/Sidebar"
 import StatBar from "./components/StatBar"
-import NarrativeDivergence from "./components/NarrativeDivergence"
-import VelocityChart from "./components/VelocityChart"
+import PropagationAnimator from "./components/PropagationAnimator"
+import CoordinatedAmplification from "./components/CoordinatedAmplification"
 import SearchPanel from "./components/SearchPanel"
 import TimeSeriesChart from "./components/TimeSeriesChart"
 import { useVisible } from "./hooks/useVisible"
@@ -187,14 +187,14 @@ export default function App() {
         {/* ── Stats — always visible ── */}
         <StatBar filters={filters} />
 
-        {/* ── Narrative Divergence — always visible, receives filters ── */}
+        {/* ── Narrative Propagation Animator — always visible ── */}
         <div className="section fade-up">
-          <NarrativeDivergence filters={filters} />
+          <PropagationAnimator filters={filters} />
         </div>
 
-        {/* ── Information Velocity — always visible ── */}
+        {/* ── Coordinated Amplification Detector — always visible ── */}
         <div className="section fade-up">
-          <VelocityChart />
+          <CoordinatedAmplification filters={filters} />
         </div>
 
         {/* ── Semantic Search — always visible, receives filters ── */}
