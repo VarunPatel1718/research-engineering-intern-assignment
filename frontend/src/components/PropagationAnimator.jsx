@@ -221,8 +221,8 @@ export default function PropagationAnimator({ filters }) {
                   borderRadius: "999px",
                   fontSize: "11px",
                 }}>
-                  <span style={{ color: "var(--text-dim)" }}>{item.label + ":"}</span>
-                  <span className="mono" style={{ color: "var(--text-primary)", fontWeight: "600" }}>
+                  <span style={{ color: "var(--text-sec)" }}>{item.label + ":"}</span>
+                  <span className="mono" style={{ color: "var(--text-sec)", fontWeight: "500" }}>
                     {item.value}
                   </span>
                 </div>

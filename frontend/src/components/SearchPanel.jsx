@@ -6,42 +6,42 @@ const BASE = import.meta.env.VITE_API_URL || ""
 
 const SEMANTIC_EXAMPLES = [
   {
-    query: "anger about government overreach",
-    note: "Zero overlap — finds posts about DOGE layoffs, nuclear firings",
+    query: "fear of losing livelihood under new policy",
+    note: "Zero overlap — surfaces posts about layoffs, budget cuts, federal firings",
     lang: "EN",
   },
   {
-    query: "economic anxiety workers losing income",
-    note: "Zero overlap — finds posts about federal employee terminations",
-    lang: "EN",
-  },
-  {
-    query: "लोकतंत्र में सत्ता का दुरुपयोग",
-    note: "Hindi query — multilingual model maps to English posts",
+    query: "राजनीतिक ध्रुवीकरण और मीडिया पक्षपात",
+    note: "Hindi — multilingual embeddings bridge to English political coverage posts",
     lang: "HI",
+  },
+  {
+    query: "distrust of institutions and surveillance state",
+    note: "Zero overlap — finds posts about FBI, FISA, government overreach",
+    lang: "EN",
   },
 ]
 
 const BLOC_FILTERS = [
-  { key: "all",          label: "All"          },
+  { key: "all", label: "All" },
   { key: "left_radical", label: "Left Radical" },
-  { key: "center_left",  label: "Center Left"  },
-  { key: "right",        label: "Right"        },
-  { key: "mixed",        label: "Mixed"        },
+  { key: "center_left", label: "Center Left" },
+  { key: "right", label: "Right" },
+  { key: "mixed", label: "Mixed" },
 ]
 
 // Sidebar subreddit → ideological bloc
 const SUBREDDIT_TO_BLOC = {
-  Anarchism:           "left_radical",
-  socialism:           "left_radical",
-  Liberal:             "center_left",
-  democrats:           "center_left",
-  politics:            "center_left",
-  neoliberal:          "center_left",
+  Anarchism: "left_radical",
+  socialism: "left_radical",
+  Liberal: "center_left",
+  democrats: "center_left",
+  politics: "center_left",
+  neoliberal: "center_left",
   PoliticalDiscussion: "center_left",
-  Conservative:        "right",
-  Republican:          "right",
-  worldpolitics:       "mixed",
+  Conservative: "right",
+  Republican: "right",
+  worldpolitics: "mixed",
 }
 
 const PAGE_SIZE = 15
@@ -78,12 +78,12 @@ function getFilterBtnStyle(isActive, blocKey) {
 
 // ── Result card ───────────────────────────────────────────────────────────────
 function ResultCard({ result, index }) {
-  const bloc     = result.ideological_bloc
-  const color    = BLOC_COLORS[bloc] || "#6b7280"
-  const sim      = Math.round((result.similarity || 0) * 100)
+  const bloc = result.ideological_bloc
+  const color = BLOC_COLORS[bloc] || "#6b7280"
+  const sim = Math.round((result.similarity || 0) * 100)
   const simColor = getSimColor(result.similarity || 0)
-  const date     = result.created_utc ? result.created_utc.slice(0, 10) : ""
-  const href     = "https://reddit.com" + (result.permalink || "")
+  const date = result.created_utc ? result.created_utc.slice(0, 10) : ""
+  const href = "https://reddit.com" + (result.permalink || "")
 
   return (
     <a
@@ -171,7 +171,7 @@ function ResultCard({ result, index }) {
 function SuggestionChip({ text, onClick }) {
   return (
     <button
-      onClick={function() { onClick(text) }}
+      onClick={function () { onClick(text) }}
       className="sp-sugg-chip"
       style={{ fontFamily: "inherit" }}
     >
@@ -182,16 +182,16 @@ function SuggestionChip({ text, onClick }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function SearchPanel({ filters }) {
-  const [query,        setQuery]        = useState("")
-  const [results,      setResults]      = useState(null)
-  const [suggestions,  setSuggestions]  = useState([])
-  const [loading,      setLoading]      = useState(false)
-  const [loadingSugg,  setLoadingSugg]  = useState(false)
-  const [error,        setError]        = useState(null)
-  const [lastQuery,    setLastQuery]    = useState("")
-  const [blocFilter,   setBlocFilter]   = useState("all")
+  const [query, setQuery] = useState("")
+  const [results, setResults] = useState(null)
+  const [suggestions, setSuggestions] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [loadingSugg, setLoadingSugg] = useState(false)
+  const [error, setError] = useState(null)
+  const [lastQuery, setLastQuery] = useState("")
+  const [blocFilter, setBlocFilter] = useState("all")
   const [showExamples, setShowExamples] = useState(false)
-  const [pageSize,     setPageSize]     = useState(PAGE_SIZE)
+  const [pageSize, setPageSize] = useState(PAGE_SIZE)
   const inputRef = useRef(null)
 
   // ── Derive sidebar bloc context ─────────────────────────────────────────────
@@ -205,7 +205,7 @@ export default function SearchPanel({ filters }) {
 
   const isSidebarControlling = blocFilter === "all" && sidebarBloc !== "all"
 
-  const doSearch = async function(q) {
+  const doSearch = async function (q) {
     const trimmed = (q || "").trim()
     if (!trimmed || trimmed.length < 2) {
       setResults({ results: [], total: 0, query: trimmed, warning: true })
@@ -233,11 +233,11 @@ export default function SearchPanel({ filters }) {
             query: trimmed,
             results: res.data.results.slice(0, 5),
           })
-          .then(function(r) {
+          .then(function (r) {
             setSuggestions(r.data.suggestions || [])
             setLoadingSugg(false)
           })
-          .catch(function() { setLoadingSugg(false) })
+          .catch(function () { setLoadingSugg(false) })
       }
     } catch (e) {
       setError("Search failed — check that the backend is running.")
@@ -245,7 +245,7 @@ export default function SearchPanel({ filters }) {
     }
   }
 
-  const handleSuggestionClick = function(s) {
+  const handleSuggestionClick = function (s) {
     setQuery(s)
     doSearch(s)
     if (inputRef.current) inputRef.current.focus()
@@ -254,13 +254,13 @@ export default function SearchPanel({ filters }) {
   const allResults = (results && results.results) ? results.results : []
 
   // Apply active bloc filter (either from sidebar or manual pill)
-  const filtered  = activeBloc === "all"
+  const filtered = activeBloc === "all"
     ? allResults
-    : allResults.filter(function(r) { return r.ideological_bloc === activeBloc })
+    : allResults.filter(function (r) { return r.ideological_bloc === activeBloc })
 
-  const displayed  = filtered.slice(0, pageSize)
-  const remaining  = filtered.length - pageSize
-  const hasMore    = remaining > 0
+  const displayed = filtered.slice(0, pageSize)
+  const remaining = filtered.length - pageSize
+  const hasMore = remaining > 0
 
   return (
     <section style={{ width: "100%" }}>
@@ -316,9 +316,9 @@ export default function SearchPanel({ filters }) {
       <div style={{ marginBottom: "22px" }}>
         <p className="sec-title">Semantic Search</p>
         <p className="sec-desc">
-          Search by meaning, not keywords. Try a concept, emotion, or even a
-          sentence in any language — the engine finds semantically related posts
-          even with zero word overlap.
+          Describe what you're looking for — not the exact words, but the idea.
+          The engine maps concepts across languages and surfaces posts that carry
+          the same meaning even when no words match.
         </p>
       </div>
 
@@ -357,9 +357,9 @@ export default function SearchPanel({ filters }) {
           )}
           {isSidebarControlling && (
             <button
-              onClick={function() {
+              onClick={function () {
                 setBlocFilter("left_radical") // force "all" by cycling
-                setTimeout(function() { setBlocFilter("all") }, 0)
+                setTimeout(function () { setBlocFilter("all") }, 0)
               }}
               style={{
                 marginLeft: "auto",
@@ -369,10 +369,10 @@ export default function SearchPanel({ filters }) {
                 padding: "0 2px",
                 transition: "color 0.15s",
               }}
-              onMouseEnter={function(e) {
+              onMouseEnter={function (e) {
                 e.currentTarget.style.color = "var(--text-primary)"
               }}
-              onMouseLeave={function(e) {
+              onMouseLeave={function (e) {
                 e.currentTarget.style.color = "var(--text-dim)"
               }}
             >
@@ -387,14 +387,14 @@ export default function SearchPanel({ filters }) {
         <input
           ref={inputRef}
           value={query}
-          onChange={function(e) { setQuery(e.target.value) }}
-          onKeyDown={function(e) { if (e.key === "Enter") doSearch(query) }}
+          onChange={function (e) { setQuery(e.target.value) }}
+          onKeyDown={function (e) { if (e.key === "Enter") doSearch(query) }}
           placeholder="Search by topic, theme, or concept (any language)..."
           className="input"
           style={{ flex: 1 }}
         />
         <button
-          onClick={function() { doSearch(query) }}
+          onClick={function () { doSearch(query) }}
           disabled={loading}
           className="btn btn-blue"
         >
@@ -412,22 +412,22 @@ export default function SearchPanel({ filters }) {
       {/* ── Semantic examples toggle ── */}
       <div style={{ marginBottom: "20px" }}>
         <button
-          onClick={function() { setShowExamples(function(v) { return !v }) }}
+          onClick={function () { setShowExamples(function (v) { return !v }) }}
           style={{
             background: "none", border: "none",
             fontSize: "11px", color: "var(--text-dim)",
             cursor: "pointer", fontFamily: "inherit",
             padding: 0, transition: "color 0.15s",
           }}
-          onMouseEnter={function(e) {
+          onMouseEnter={function (e) {
             e.currentTarget.style.color = "var(--text-sec)"
           }}
-          onMouseLeave={function(e) {
+          onMouseLeave={function (e) {
             e.currentTarget.style.color = "var(--text-dim)"
           }}
         >
           {(showExamples ? "▲ Hide" : "▼ Show") +
-           " semantic search examples (zero keyword overlap)"}
+            " semantic search examples (zero keyword overlap)"}
         </button>
 
         {showExamples && (
@@ -438,7 +438,7 @@ export default function SearchPanel({ filters }) {
             borderRadius: "10px",
             overflow: "hidden",
           }}>
-            {SEMANTIC_EXAMPLES.map(function(ex, i) {
+            {SEMANTIC_EXAMPLES.map(function (ex, i) {
               return (
                 <div key={i} style={{
                   display: "flex", alignItems: "flex-start",
@@ -462,7 +462,7 @@ export default function SearchPanel({ filters }) {
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <button
-                      onClick={function() { setQuery(ex.query); doSearch(ex.query) }}
+                      onClick={function () { setQuery(ex.query); doSearch(ex.query) }}
                       style={{
                         background: "none", border: "none",
                         padding: 0, cursor: "pointer",
@@ -471,10 +471,10 @@ export default function SearchPanel({ filters }) {
                         lineHeight: "1.5", wordBreak: "break-word",
                         transition: "color 0.15s",
                       }}
-                      onMouseEnter={function(e) {
+                      onMouseEnter={function (e) {
                         e.currentTarget.style.color = "#93bbfd"
                       }}
-                      onMouseLeave={function(e) {
+                      onMouseLeave={function (e) {
                         e.currentTarget.style.color = "#4f8ef7"
                       }}
                     >
@@ -512,7 +512,7 @@ export default function SearchPanel({ filters }) {
       {/* ── Loading ── */}
       {loading && (
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          {[1,2,3,4,5].map(function(i) {
+          {[1, 2, 3, 4, 5].map(function (i) {
             return (
               <div key={i} className="skeleton"
                 style={{ height: "68px", borderRadius: "8px" }} />
@@ -569,22 +569,22 @@ export default function SearchPanel({ filters }) {
             {/* Bloc filter pills */}
             {results.total > 0 && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                {BLOC_FILTERS.map(function(f) {
+                {BLOC_FILTERS.map(function (f) {
                   const cnt = f.key === "all"
                     ? allResults.length
-                    : allResults.filter(function(r) {
-                        return r.ideological_bloc === f.key
-                      }).length
+                    : allResults.filter(function (r) {
+                      return r.ideological_bloc === f.key
+                    }).length
 
                   // Highlight pill that matches sidebar bloc if no manual filter
                   const isActive = blocFilter === f.key ||
                     (blocFilter === "all" && f.key === sidebarBloc &&
-                     sidebarBloc !== "all")
+                      sidebarBloc !== "all")
 
                   return (
                     <button
                       key={f.key}
-                      onClick={function() {
+                      onClick={function () {
                         // If clicking the currently sidebar-active pill, clear manual
                         if (f.key === sidebarBloc && blocFilter === "all") {
                           setBlocFilter("all")
@@ -635,7 +635,7 @@ export default function SearchPanel({ filters }) {
                 No results from this community for that query
               </p>
               <button
-                onClick={function() { setBlocFilter("all") }}
+                onClick={function () { setBlocFilter("all") }}
                 style={{
                   background: "none", border: "none",
                   color: "var(--blue, #4f8ef7)",
@@ -651,7 +651,7 @@ export default function SearchPanel({ filters }) {
           {/* Result cards */}
           {displayed.length > 0 && (
             <div style={{ marginBottom: "10px" }}>
-              {displayed.map(function(r, i) {
+              {displayed.map(function (r, i) {
                 return <ResultCard key={i} result={r} index={i} />
               })}
             </div>
@@ -662,8 +662,8 @@ export default function SearchPanel({ filters }) {
             <div style={{ marginBottom: "16px" }}>
               <button
                 className="sp-showmore-btn"
-                onClick={function() {
-                  setPageSize(function(p) { return p + PAGE_SIZE })
+                onClick={function () {
+                  setPageSize(function (p) { return p + PAGE_SIZE })
                 }}
               >
                 <span style={{ color: "var(--text-dim)" }}>
@@ -707,7 +707,7 @@ export default function SearchPanel({ filters }) {
               </p>
               {loadingSugg ? (
                 <div style={{ display: "flex", gap: "8px" }}>
-                  {[1,2,3].map(function(i) {
+                  {[1, 2, 3].map(function (i) {
                     return (
                       <div key={i} className="skeleton"
                         style={{ height: "30px", width: "120px", borderRadius: "999px" }} />
@@ -716,7 +716,7 @@ export default function SearchPanel({ filters }) {
                 </div>
               ) : (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                  {suggestions.map(function(s, i) {
+                  {suggestions.map(function (s, i) {
                     return (
                       <SuggestionChip
                         key={i}
