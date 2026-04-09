@@ -18,6 +18,7 @@ NarrativeTrail is an investigative data platform that traces how political narra
 | **Backend API (Hugging Face)** | https://varunpatel-narrativetrail-backend.hf.space |
 | **Health Check** | https://varunpatel-narrativetrail-backend.hf.space/api/health |
 | **GitHub Repository** | https://github.com/VarunPatel1718/NarrativeTrail |
+| **Video Walkthrough** | https://drive.google.com/file/d/1novriPyi8ju4JLRp4aaanWkkgAIq-4VN/view?usp=sharing |
 
 ---
 
